@@ -135,6 +135,8 @@ npm run docs:tools
 
 **管理页面要求重新打开**：运行 `Start.cmd`。裸地址不包含管理会话的启动凭证。
 
+**启动失败**：脚本会显示启动错误码；本地数据目录的 `manager-startup-error.json` 保存最近失败的时间、进程号和错误码。`EADDRINUSE` 表示端口被占用。
+
 **ChatGPT 看不到 Tunnel**：检查 Platform 的 Tunnel 权限、目标账号/工作区关联、自定义 MCP 权限，以及控制台诊断。已有连接新增工具后需刷新工具列表。
 
 **登录过期**：重新打开本地登录窗口完成授权。不要把 Cookie、API Key 或登录代码发给聊天。

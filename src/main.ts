@@ -430,8 +430,14 @@ async function createManagerInternal(options: ManagerOptions, release: () => Pro
   return { server, runtime, close, q, safety, tunnel, status, tools };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const manager = await createManager().catch((e) => {
-    log('manager_start_failed', e instanceof AppError ? e.code : (e as NodeJS.ErrnoException).code);
+  const manager = await createManager().catch(async (e) => {
+    const code = e instanceof AppError ? e.code : (e as NodeJS.ErrnoException).code;
+    log('manager_start_failed', code);
+    await atomicJson(join(DATA, 'manager-startup-error.json'), {
+      time: new Date().toISOString(),
+      pid: process.pid,
+      code: code ?? 'START_FAILED',
+    }).catch(() => {});
     process.exit(1);
   });
   for (const signal of ['SIGINT', 'SIGTERM'] as const)

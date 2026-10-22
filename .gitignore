@@ -61,6 +61,7 @@ user-assets*.json
 *.sqlite*
 *.db
 runtime.json
+manager-startup-error.json
 ledger.json
 tunnel-config*.yaml
 tunnel-health.url
