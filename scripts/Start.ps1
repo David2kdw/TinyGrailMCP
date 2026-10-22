@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot
 Set-Location $projectRoot
 if (!(Test-Path -LiteralPath "$projectRoot/dist/main.js")) { throw 'Run scripts/Install.ps1 first.' }
-$dataPath = if ($env:TG_DATA_DIR) { $env:TG_DATA_DIR } else { Join-Path $env:LOCALAPPDATA 'TinyGrailMCP' }
+$dataPath = if ($env:TG_DATA_DIR) { $env:TG_DATA_DIR } else { Join-Path $env:USERPROFILE '.tinygrailmcp' }
 $runtimePath = Join-Path $dataPath 'runtime.json'
 function Get-RunningManager {
   try {
@@ -41,7 +41,7 @@ if (!$runtime) {
       $failureCode = 'START_FAILED'
       try {
         $entry = Get-Content -Raw -LiteralPath $diagnosticPath | ConvertFrom-Json
-        if ($entry.pid -eq $managerProcess.Id -and [DateTime]::Parse($entry.time).ToUniversalTime() -ge $launchedAt -and $entry.code -match '^[A-Z0-9_]+$') { $failureCode = $entry.code }
+        if ($entry.pid -eq $managerProcess.Id -and ([DateTime]$entry.time).ToUniversalTime() -ge $launchedAt -and $entry.code -match '^[A-Z0-9_]+$') { $failureCode = $entry.code }
       } catch {}
       throw "Manager exited before startup completed ($failureCode). Diagnostic file: $diagnosticPath"
     }

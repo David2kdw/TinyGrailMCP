@@ -1,4 +1,5 @@
+param([switch]$NoBrowser)
 $ErrorActionPreference = 'Stop'
 & "$PSScriptRoot/Stop.ps1"
 if ($LASTEXITCODE -ne 0) { throw 'Stop failed; replacement was not started.' }
-& "$PSScriptRoot/Start.ps1"
+& "$PSScriptRoot/Start.ps1" -NoBrowser:$NoBrowser

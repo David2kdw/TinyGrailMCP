@@ -27,6 +27,7 @@ Thumbs.db
 
 # Local configuration, login profiles, encrypted stores and account records.
 /TinyGrailMCP/
+.tinygrailmcp/
 /local-data/
 /runtime/
 /browser-data/

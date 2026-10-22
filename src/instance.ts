@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { mkdir, open, readFile, rm } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { AppError, atomicJson, DATA, fingerprint, readJson } from './core.js';
+import { AppError, atomicJson, DEFAULT_DATA, fingerprint, readJson } from './core.js';
 
 interface ProcessIdentity {
   pid: number;
@@ -42,12 +42,7 @@ export class TunnelLease {
     tunnelId: string,
     private directory: string,
   ) {
-    this.path = join(
-      process.env.LOCALAPPDATA ?? DATA,
-      'TinyGrailMCP',
-      'tunnel-locks',
-      `${fingerprint(tunnelId)}.json`,
-    );
+    this.path = join(DEFAULT_DATA, 'tunnel-locks', `${fingerprint(tunnelId)}.json`);
   }
   async acquire() {
     await mkdir(join(this.path, '..'), { recursive: true, mode: 0o700 });

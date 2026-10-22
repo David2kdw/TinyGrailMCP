@@ -3,12 +3,13 @@ import { mkdir, open, readFile, rename, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { homedir } from 'node:os';
 
 export const VERSION = '1.1.0';
 export const ROOT = resolve(import.meta.dirname, '..');
-export const DATA = resolve(
-  process.env.TG_DATA_DIR ?? join(process.env.LOCALAPPDATA ?? ROOT, 'TinyGrailMCP'),
-);
+// AppData can have different filesystem views inside Microsoft Store PowerShell.
+export const DEFAULT_DATA = join(homedir(), '.tinygrailmcp');
+export const DATA = resolve(process.env.TG_DATA_DIR ?? DEFAULT_DATA);
 export const runFile = join(DATA, 'runtime.json');
 export const randomToken = () => randomBytes(32).toString('hex');
 export const fingerprint = (v: unknown) => createHash('sha256').update(JSON.stringify(v)).digest('hex');

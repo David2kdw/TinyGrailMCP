@@ -43,7 +43,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
 2. 点击检查登录，确认账户资料能够读取。
 3. 在本地控制台配置 Tunnel；游戏 Cookie 和 API Key 分别使用 Windows DPAPI 加密保存在当前用户目录。
 
-默认运行数据目录为 `%LOCALAPPDATA%\TinyGrailMCP`。开发时可通过环境变量 `TG_DATA_DIR` 指定独立目录。该目录包含登录状态、运行令牌、交易计划和日志，应保留在本机。
+默认运行数据目录为 `%USERPROFILE%\.tinygrailmcp`，兼容 Microsoft Store 版 PowerShell。开发时可通过环境变量 `TG_DATA_DIR` 指定独立目录。该目录包含登录状态、运行令牌、交易计划和日志，应保留在本机。
+
+旧版数据位于 `%LOCALAPPDATA%\TinyGrailMCP`：升级前先用旧版停止管理器，然后将该目录移动至 `%USERPROFILE%\.tinygrailmcp`；目标目录已有数据时不要覆盖。
 
 ## 配置 OpenAI Secure MCP Tunnel
 
@@ -146,6 +148,8 @@ npm run docs:tools
 **计划过期或状态变更**：重新查询并准备；原计划不会执行。若结果未知，先在游戏核对订单及资产，再在本地填写对账说明。
 
 **停止、重启或卸载**：
+
+也可双击根目录的 `Stop.cmd` 停止，或 `Restart.cmd` 重启。
 
 ```powershell
 .\scripts\Stop.ps1
