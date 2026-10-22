@@ -11,6 +11,7 @@ import { Queries } from './services/queries.js';
 import { Safety } from './safety/engine.js';
 import * as z from 'zod/v4';
 
+// These checks use an anonymous session; auction and character search require authentication.
 export const publicChecks: ReadRequest[] = [
   { path: 'chara/1' },
   { path: 'chara/depth/1' },
@@ -18,14 +19,11 @@ export const publicChecks: ReadRequest[] = [
   { path: 'chara/links/1' },
   { path: 'chara/users/1/1/3' },
   { path: 'chara/charts/1/2026-10-01' },
-  { path: 'chara/auction/list', method: 'POST', body: [1] },
-  { path: 'chara/auction/list/1/1' },
   { path: 'chara/mri/1/3' },
   { path: 'chara/pool/1' },
   { path: 'chara/user/1/tinygrail/false' },
   { path: 'chara/user/chara/tinygrail/1/3', method: 'POST' },
   { path: 'chara/user/chara/blueleaf/1/3', method: 'POST' },
-  { path: 'chara/search/character?keyword=%E9%B2%81%E8%B7%AF%E4%BF%AE' },
   { path: 'chara/babel/1/3' },
   { path: 'chara/msrc/1/3' },
   { path: 'chara/mvc/1/3' },

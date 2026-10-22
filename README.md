@@ -2,13 +2,15 @@
 
 在 Windows 本地运行的小圣杯 MCP 应用，让 ChatGPT 查询市场、角色和账户，并在本地逐笔确认游戏操作。
 
+**开发状态：正在开发中。许多写操作尚未经过真实账户测试；目前仅 ICO 追加投资完成过一次真实执行与资产核验。**
+
 - **市场探索**：每周萌王、往期萌王、通天塔、英灵殿、幻想乡、ICO、ST、上市角色、股息/市值/涨跌榜、精炼榜、番市首富、最新圣殿和 LINK。
-- **角色查询**：名称搜索、批量行情、股东、买卖盘、历史行情、个人委托与成交、圣殿、LINK 和奖池。
+- **角色查询**：名称搜索、批量行情、股东、买卖盘、历史行情、个人委托与历史记录、圣殿、LINK 和奖池。
 - **Bangumi 发现**：搜索完整角色库与作品，浏览作品角色、角色出演作品和人物关系，批量检查小圣杯状态，寻找 ICO 候选。
 - **账户管理**：资产、持股、圣殿、ICO、拍卖、道具、资金流水、红包记录、股息及圣殿收益估算。
 - **本地审批**：限价与冰山委托、撤单、拍卖、ICO 发起/投资、献祭建塔与升级、融资、星之力、精炼、魔法、圣殿编辑/连接/拆除、图片上传、奖励及红包。
 
-写权限默认关闭。MCP 只能创建计划，实际执行必须由你在 Windows 管理界面批准。GM 接口不接入。写入适配器经过隔离模拟测试，尚未进行真实账户写入验收。
+写权限默认关闭。MCP 只能创建计划，实际执行必须由你在 Windows 管理界面批准。GM 接口不接入。
 
 ## 环境要求
 
@@ -95,7 +97,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
 | 作品与人物关系     | `list_bangumi_subject_characters`、`get_bangumi_character_casts`、`get_bangumi_character_relations`    |
 | 角色市场状态       | `get_character_market_status`；角色类 Bangumi 查询也支持 `includeMarket: true`                         |
 | 角色市场资料       | `get_orderbook`、`get_price_history`、`list_character_holders`、`get_character_links`                  |
-| 本人角色订单与成交 | `get_my_character_trading`                                                                             |
+| 本人角色订单与委托历史 | `get_my_character_trading`                                                                             |
 | 账户与资产         | `get_account_overview`、`get_asset_breakdown`、`list_holdings`、`list_temples`                         |
 | 其他玩家公开资料   | `get_user_profile`、`get_user_character`、`list_user_assets`                                           |
 | ICO/拍卖           | `get_ico_status`、`list_ico_participants`、`get_auction_status`、`get_auction_history`                 |
@@ -157,7 +159,7 @@ npm run docs:tools
 
 **登录过期**：重新打开本地登录窗口完成授权。不要把 Cookie、API Key 或登录代码发给聊天。
 
-**查询失败**：工具结果包含错误码；先检查登录与网络。GM 专用逐笔历史不提供，普通玩家可用行情图表和本人角色成交记录。
+**查询失败**：工具结果包含错误码；先检查登录与网络。GM 专用逐笔历史不提供，普通玩家可用行情图表和本人委托历史。
 
 **计划过期或状态变更**：重新查询并准备；原计划不会执行。若结果未知，先在游戏核对订单及资产，再在本地填写对账说明。
 
