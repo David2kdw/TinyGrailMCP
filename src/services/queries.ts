@@ -2,6 +2,8 @@ import { ApiClient, type ApiResult, type ReadRequest } from '../api/client.js';
 import { AppError, object, pick, publicError } from '../core.js';
 import { historyPageData, pageData, safeData } from '../models.js';
 import { decimal, icoPrediction, templeIncome } from '../calculations.js';
+import { BangumiQueries } from './bangumi.js';
+import { marketStatus } from './market-status.js';
 
 export function result<T>(r: ApiResult, data: T) {
   return {
@@ -11,7 +13,50 @@ export function result<T>(r: ApiResult, data: T) {
   };
 }
 export class Queries {
-  constructor(public api: ApiClient) {}
+  constructor(
+    public api: ApiClient,
+    public bangumi = new BangumiQueries(),
+  ) {}
+  async marketStatuses(characterIds: number[]) {
+    const ids = [...new Set(characterIds)];
+    if (!ids.length) return { data: { items: [] }, observedAt: new Date().toISOString() };
+    const r = await this.api.read({ path: 'chara/list', method: 'POST', body: ids });
+    if (!Array.isArray(r.value)) throw new AppError('SCHEMA', '角色批量响应不是数组。');
+    const records = new Map<number, any>();
+    for (const v of r.value) {
+      const characterId = Number(v?.CharacterId);
+      if (!ids.includes(characterId) || records.has(characterId))
+        throw new AppError('SCHEMA', '角色批量响应包含重复或非请求角色。');
+      records.set(characterId, v);
+    }
+    const serverNow = Date.parse(r.serverTime ?? r.observedAt);
+    return result(r, {
+      items: ids.map((characterId) => ({
+        characterId,
+        ...(records.has(characterId)
+          ? marketStatus(records.get(characterId), serverNow)
+          : { status: 'not_in_market' as const }),
+      })),
+    });
+  }
+  async attachMarket(r: { data: any; observedAt: string }, includeMarket: boolean) {
+    if (!includeMarket) return r;
+    const entries: any[] = r.data.items ?? [r.data];
+    const characters = entries.map((v) => v.character ?? v);
+    try {
+      const market = await this.marketStatuses(characters.map((v) => v.characterId));
+      const byId = new Map(market.data.items.map((v) => [v.characterId, v]));
+      for (const character of characters) {
+        const { characterId: _, ...state } = byId.get(character.characterId)!;
+        character.market = state;
+      }
+      r.data.marketObservedAt = market.observedAt;
+    } catch (e) {
+      for (const character of characters) character.market = { status: 'unknown' };
+      r.data.marketError = publicError(e);
+    }
+    return r;
+  }
   async account() {
     const r = await this.api.read({ path: 'chara/user/assets', auth: true });
     const v = object(r.value);
@@ -52,7 +97,11 @@ export class Queries {
     const r = await this.api.read({ path: `chara/${characterId}` });
     const v = object(r.value);
     if (!v.Id || typeof v.Name !== 'string') throw new AppError('SCHEMA', '角色数据缺少身份字段。');
-    return result(r, { ...safeData(v), marketType: Object.hasOwn(v, 'Current') ? 'listed' : 'ico' });
+    return result(r, {
+      ...safeData(v),
+      marketType: Object.hasOwn(v, 'Current') ? 'listed' : 'ico',
+      marketStatus: marketStatus(v, Date.parse(r.serverTime ?? r.observedAt)).status,
+    });
   }
   async topWeek(keyword?: string, characterId?: number, includeDetails = false) {
     const r = await this.api.read({ path: 'chara/topweek' });

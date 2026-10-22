@@ -31,6 +31,85 @@ export function buildTools(q: Queries, safety: Safety, status: () => Promise<unk
   });
   const tools: Tool[] = [
     t(
+      'search_bangumi_characters',
+      '搜索整个 Bangumi 角色数据库；includeMarket 批量附带小圣杯状态。不会发起 ICO。',
+      { keyword: z.string().trim().min(1).max(120), ...pages, includeMarket: z.boolean().default(false) },
+      async (a) =>
+        q.attachMarket(await q.bangumi.searchCharacters(a.keyword, a.page, a.pageSize), a.includeMarket),
+    ),
+    t(
+      'search_bangumi_subjects',
+      '搜索 Bangumi 作品；按 ID、类型和媒介区分重名作品。type：1书籍、2动画、3音乐、4游戏、6三次元。',
+      {
+        keyword: z.string().trim().min(1).max(120),
+        ...pages,
+        types: z
+          .array(z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(6)]))
+          .max(5)
+          .optional(),
+        sort: z.enum(['match', 'heat', 'rank', 'score']).default('match'),
+      },
+      async (a) => q.bangumi.searchSubjects(a.keyword, a.page, a.pageSize, a.types, a.sort),
+    ),
+    t(
+      'get_bangumi_subject',
+      '按作品 ID 查询 Bangumi 作品详情；完整 infobox、标签和图片按需返回。',
+      { subjectId: id, includeDetails: z.boolean().default(false) },
+      async (a) => q.bangumi.subject(a.subjectId, a.includeDetails),
+    ),
+    t(
+      'list_bangumi_subject_characters',
+      '分页浏览作品关联角色；appearanceType 是 API 原生出演类型（1主角、2配角、3客串）。可附带小圣杯状态。',
+      {
+        subjectId: id,
+        ...pages,
+        appearanceType: z.number().int().positive().max(100).optional(),
+        includeMarket: z.boolean().default(false),
+      },
+      async (a) =>
+        q.attachMarket(
+          await q.bangumi.subjectCharacters(a.subjectId, a.page, a.pageSize, a.appearanceType),
+          a.includeMarket,
+        ),
+    ),
+    t(
+      'get_bangumi_character',
+      '查询 Bangumi 角色姓名、中文名、简介与头像；完整 infobox 和图片按需返回。',
+      {
+        characterId: id,
+        includeDetails: z.boolean().default(false),
+        includeMarket: z.boolean().default(false),
+      },
+      async (a) =>
+        q.attachMarket(await q.bangumi.character(a.characterId, a.includeDetails), a.includeMarket),
+    ),
+    t(
+      'get_bangumi_character_casts',
+      '分页查询角色出演作品，保留作品 ID、类型和出演类型；可筛选 subjectType、appearanceType。',
+      {
+        characterId: id,
+        ...pages,
+        subjectType: z
+          .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(6)])
+          .optional(),
+        appearanceType: z.number().int().positive().max(100).optional(),
+      },
+      async (a) => q.bangumi.casts(a.characterId, a.page, a.pageSize, a.subjectType, a.appearanceType),
+    ),
+    t(
+      'get_bangumi_character_relations',
+      '分页探索 Bangumi 人物关系，保留同一角色的多条关系及剧透、结束标记。与小圣杯圣殿 LINK 无关。',
+      { characterId: id, ...pages, includeMarket: z.boolean().default(false) },
+      async (a) =>
+        q.attachMarket(await q.bangumi.relations(a.characterId, a.page, a.pageSize), a.includeMarket),
+    ),
+    t(
+      'get_character_market_status',
+      '批量检查 Bangumi 角色的小圣杯状态：listed、ico_active、ico_ended、ico_pending、not_in_market、other、unknown。not_in_market 为成功查询但无当前记录，可作为发起 ICO 候选。',
+      { characterIds: z.array(id).min(1).max(100) },
+      async (a) => q.marketStatuses(a.characterIds),
+    ),
+    t(
       'get_top_week',
       '查询整榜每周萌王、评分和竞拍情况；可按名称或角色筛选，排名保持整榜口径。',
       {

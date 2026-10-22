@@ -4,6 +4,7 @@
 
 - **市场探索**：每周萌王、往期萌王、通天塔、英灵殿、幻想乡、ICO、ST、上市角色、股息/市值/涨跌榜、精炼榜、番市首富、最新圣殿和 LINK。
 - **角色查询**：名称搜索、批量行情、股东、买卖盘、历史行情、个人委托与成交、圣殿、LINK 和奖池。
+- **Bangumi 发现**：搜索完整角色库与作品，浏览作品角色、角色出演作品和人物关系，批量检查小圣杯状态，寻找 ICO 候选。
 - **账户管理**：资产、持股、圣殿、ICO、拍卖、道具、资金流水、红包记录、股息及圣殿收益估算。
 - **本地审批**：限价与冰山委托、撤单、拍卖、ICO 发起/投资、献祭建塔与升级、融资、星之力、精炼、魔法、圣殿编辑/连接/拆除、图片上传、奖励及红包。
 
@@ -79,22 +80,35 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install.ps1
 >
 > 搜索角色，比较行情、股息、股东和买卖盘。
 >
+> 找《里世界郊游》的动画角色，检查哪些尚无小圣杯市场记录。
+>
+> 查空鱼的人物关系，再看看鸟子出演了哪些作品。
+>
 > 查我的持仓和资金流水，估算这个圣殿的单期收入。
 
-| 需求               | 工具                                                                                      |
-| ------------------ | ----------------------------------------------------------------------------------------- |
-| 当前/历史萌王      | `get_top_week`、`get_top_week_history`                                                    |
-| 市场及排行榜       | `list_market`，通过 `category` 选择榜单                                                   |
-| 查找与比较角色     | `search_characters`、`get_character`、`get_characters`                                    |
-| 角色市场资料       | `get_orderbook`、`get_price_history`、`list_character_holders`、`get_character_links`     |
-| 本人角色订单与成交 | `get_my_character_trading`                                                                |
-| 账户与资产         | `get_account_overview`、`get_asset_breakdown`、`list_holdings`、`list_temples`            |
-| 其他玩家公开资料   | `get_user_profile`、`get_user_character`、`list_user_assets`                              |
-| ICO/拍卖           | `get_ico_status`、`list_ico_participants`、`get_auction_status`、`get_auction_history`    |
-| 日常及计算         | `get_daily_status`、`get_dividend_forecast`、`estimate_temple_income`、`calculate_budget` |
-| 操作计划           | 各类 `prepare_*` 工具，`get_trade_plan` 查看结果                                          |
+| 需求               | 工具                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| 当前/历史萌王      | `get_top_week`、`get_top_week_history`                                                                 |
+| 市场及排行榜       | `list_market`，通过 `category` 选择榜单                                                                |
+| 查找与比较角色     | `search_characters`、`get_character`、`get_characters`                                                 |
+| Bangumi 搜索与详情 | `search_bangumi_characters`、`search_bangumi_subjects`、`get_bangumi_character`、`get_bangumi_subject` |
+| 作品与人物关系     | `list_bangumi_subject_characters`、`get_bangumi_character_casts`、`get_bangumi_character_relations`    |
+| 角色市场状态       | `get_character_market_status`；角色类 Bangumi 查询也支持 `includeMarket: true`                         |
+| 角色市场资料       | `get_orderbook`、`get_price_history`、`list_character_holders`、`get_character_links`                  |
+| 本人角色订单与成交 | `get_my_character_trading`                                                                             |
+| 账户与资产         | `get_account_overview`、`get_asset_breakdown`、`list_holdings`、`list_temples`                         |
+| 其他玩家公开资料   | `get_user_profile`、`get_user_character`、`list_user_assets`                                           |
+| ICO/拍卖           | `get_ico_status`、`list_ico_participants`、`get_auction_status`、`get_auction_history`                 |
+| 日常及计算         | `get_daily_status`、`get_dividend_forecast`、`estimate_temple_income`、`calculate_budget`              |
+| 操作计划           | 各类 `prepare_*` 工具，`get_trade_plan` 查看结果                                                       |
 
 列表支持页码和每页数量；玩家持股和圣殿查询还支持服务器原生筛选。完整参数可在本地控制台搜索工具并查看 Schema。默认输出业务数据，计算依据可传 `includeDetails: true` 查看。
+
+Bangumi 搜索覆盖公开可查询的角色和作品，不局限于小圣杯市场；`search_characters` 仍用于市场搜索。作品搜索支持 `types` 与 `sort`，详情保留媒介、日期和简介，以区分重名作品。人物关系保留同一角色的多条关系、关系描述、剧透和结束标记，与圣殿 LINK 分开。
+
+发现流程：`search_bangumi_subjects` 找作品 → `list_bangumi_subject_characters` 浏览角色（`page`、`pageSize`，可带 `includeMarket: true`）→ 选择角色并指定金额 → `prepare_ico_start` 准备计划 → Windows 本地批准。搜索不会创建 ICO 或交易计划。关系中的角色 ID 也可继续用于详情、关系、出演作品和市场查询。
+
+市场状态包括 `listed`、`ico_active`、`ico_ended`、`ico_pending`、`not_in_market`、`other`、`unknown`。`not_in_market` 表示成功的批量查询未返回该角色的当前市场记录，不判断历史上是否发起过 ICO；ICO 结束由返回记录的期限判断，其他业务状态保留 `State`。查询失败会返回错误，附带市场查询失败时保留 Bangumi 数据并标为 `unknown`。每页最多 100 条，市场状态使用一次去重后的批量查询。
 
 萌王评分按 Magrail 的整榜公式估算，排名沿用当前萌王接口的榜单顺序，与通天塔名次分别表示。历史榜的 `Level` 为当期排名，`CharacterLevel` 为角色等级；默认每页 12 条，保留 `Create` 期次时间。历史接口没有独立的日期筛选参数。
 
@@ -160,4 +174,4 @@ npm run docs:tools
 
 ## 参考与许可
 
-API 和业务规则参考 [Magrail](https://github.com/koorinyaa/magrail_app)（MIT）并与 [TinyGrail Magic](https://github.com/koorinyaa/tinygrail-magic) 交叉核对；萌王、ICO 和圣殿计算保留来源。MCP 使用官方 TypeScript SDK，传输使用官方 OpenAI Secure MCP Tunnel。本项目采用 [MIT License](LICENSE)。
+API 和业务规则参考 [Magrail](https://github.com/koorinyaa/magrail_app)（MIT）并与 [TinyGrail Magic](https://github.com/koorinyaa/tinygrail-magic) 交叉核对；萌王、ICO 和圣殿计算保留来源。Bangumi 搜索和详情使用[公开 API](https://bangumi.github.io/api/)，分页出演与人物关系使用 [/p1 API](https://bangumi.github.io/dev-docs/)，独立客户端不携带 TinyGrail Cookie。MCP 使用官方 TypeScript SDK，传输使用官方 OpenAI Secure MCP Tunnel。本项目采用 [MIT License](LICENSE)。

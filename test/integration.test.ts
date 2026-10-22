@@ -12,6 +12,7 @@ import { Session } from '../src/auth/session.js';
 import { Vault } from '../src/auth/vault.js';
 import { ROOT, protectDirectory } from '../src/core.js';
 import { fixture } from './helpers.js';
+import { BangumiClient } from '../src/api/bangumi.js';
 
 test('real SDK stdio initialize/discover/call traverses manager and returns structured server data', async () => {
   const f = await fixture(),
@@ -32,6 +33,48 @@ test('real SDK stdio initialize/discover/call traverses manager and returns stru
     const ping = await client.callTool({ name: 'ping', arguments: {} });
     assert.equal(ping.isError, undefined);
     assert.equal(ping.structuredContent?.ok, true);
+    f.q.bangumi.client = new BangumiClient(
+      async () =>
+        Response.json({
+          data: [
+            {
+              character: { id: 2, name: '同一关联角色', images: null },
+              relation: { id: 2002, cn: '朋友', desc: '' },
+              spoiler: false,
+              ended: false,
+              comment: '',
+            },
+            {
+              character: { id: 2, name: '同一关联角色', images: null },
+              relation: { id: 2003, cn: '恋人', desc: '关系描述' },
+              spoiler: true,
+              ended: false,
+              comment: '备注',
+            },
+          ],
+          total: 2,
+        }),
+      0,
+    );
+    const relations = await client.callTool({
+      name: 'get_bangumi_character_relations',
+      arguments: { characterId: 1 },
+    });
+    const related = (relations.structuredContent?.data as any).items;
+    assert.deepEqual(
+      related.map((v: any) => v.relation.id),
+      [2002, 2003],
+    );
+    assert.equal(related[1].spoiler, true);
+    assert.equal(related[1].comment, '备注');
+    f.q.bangumi.client = new BangumiClient(async () => new Response(null, { status: 503 }), 0);
+    const unavailable = await client.callTool({
+      name: 'get_bangumi_character',
+      arguments: { characterId: 1 },
+    });
+    assert.equal(unavailable.structuredContent?.status, 'error');
+    assert.equal((unavailable.structuredContent?.error as any).code, 'BANGUMI_HTTP');
+    assert.equal(f.writes.length, 0);
     const r = await client.callTool({ name: 'get_account_overview', arguments: {} });
     assert.equal(r.isError, undefined);
     assert.equal((r.structuredContent?.data as any)?.Balance, '1000000.123456');

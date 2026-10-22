@@ -129,8 +129,10 @@ export async function gameSnapshot(q: Queries, action: GameAction, a: any) {
     try {
       s.character = characterState(await read(`chara/${a.characterId}`));
     } catch (e) {
-      // The real API reports unissued characters as a business failure, not an empty character.
+      // A rejected detail request alone does not establish absence from the market.
       if (action !== 'ico_start' || !(e instanceof AppError) || e.code !== 'API_REJECTED') throw e;
+      const market = await q.marketStatuses([a.characterId]);
+      if (market.data.items[0]?.status !== 'not_in_market') throw e;
       s.character = { CharacterId: a.characterId, unissued: true };
     }
   }

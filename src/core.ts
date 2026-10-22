@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { homedir } from 'node:os';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 export const ROOT = resolve(import.meta.dirname, '..');
 // AppData can have different filesystem views inside Microsoft Store PowerShell.
 export const DEFAULT_DATA = join(homedir(), '.tinygrailmcp');

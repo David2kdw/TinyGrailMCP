@@ -6,6 +6,8 @@ import { Safety } from '../src/safety/engine.js';
 import { gameActions, imageData, type GameAction } from '../src/safety/game-actions.js';
 import { fixture } from './helpers.js';
 import { buildTools, invoke } from '../src/tools.js';
+import { BangumiClient } from '../src/api/bangumi.js';
+import { BangumiQueries } from '../src/services/bangumi.js';
 async function gameFixture(action: GameAction) {
   const f = await fixture();
   const profile = { ...f.account, ShowDaily: 1, ShowWeekly: 1, ShowHoliday: 1 };
@@ -46,7 +48,7 @@ async function gameFixture(action: GameAction) {
     const url = new URL(String(input)),
       path = url.pathname.replace(/^\/api\//, '');
     const mutating =
-      (init?.method === 'POST' && !path.startsWith('chara/user/chara/')) ||
+      (init?.method === 'POST' && !path.startsWith('chara/user/chara/') && path !== 'chara/list') ||
       init?.method === 'PUT' ||
       path === 'chara/update/1' ||
       path === 'event/holiday/bonus';
@@ -112,7 +114,8 @@ async function gameFixture(action: GameAction) {
       } else if (path === 'account/logout') await f.session.jar.removeAllCookies();
       else if (path !== 'chara/update/1') throw Error('Unexpected mock write ' + path);
       if (lost) throw Error('lost response');
-    } else if (path === 'chara/user/assets') v = profile;
+    } else if (path === 'chara/list') v = issued ? [source] : [];
+    else if (path === 'chara/user/assets') v = profile;
     else if (path === 'chara/1') {
       if (!issued) return Response.json({ State: 1 });
       v = source;
@@ -173,6 +176,33 @@ test('every new player write traverses immutable plan, approval, one dispatch an
     assert.equal(f.writes.length, n, action);
     assert.ok(!JSON.stringify(r).includes('FAKE_SIGNATURE'));
   }
+});
+test('Bangumi discovery can feed an ICO plan without dispatching any game operation', async () => {
+  const f = await gameFixture('ico_start');
+  f.q.bangumi = new BangumiQueries(
+    new BangumiClient(
+      async () =>
+        Response.json({
+          data: [{ id: 1, name: '待发行角色', images: null }],
+          total: 1,
+          limit: 30,
+          offset: 0,
+        }),
+      0,
+    ),
+  );
+  const tools = buildTools(f.q, f.safety, async () => ({}));
+  const search = await invoke(tools, 'search_bangumi_characters', { keyword: '待发行', includeMarket: true });
+  const candidate = search.data.items[0];
+  assert.equal(candidate.market.status, 'not_in_market');
+  assert.equal(f.writes.length, 0);
+  const plan = await invoke(tools, 'prepare_ico_start', {
+    characterId: candidate.characterId,
+    amount: '10000',
+    requestId: 'discovered-ico-plan',
+  });
+  assert.equal(plan.status, 'pending');
+  assert.equal(f.writes.length, 0);
 });
 test('new writes invalidate changed assets, enforce risk/share limits, and block lost GET and POST outcomes', async () => {
   const f = await gameFixture('chaos');
