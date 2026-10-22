@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TinyGrail · 本地控制台</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <aside>
+      <div class="brand">
+        <span class="mark">T</span>
+        <div>TinyGrail<span class="sub">MCP · 本地控制台</span></div>
+      </div>
+      <nav>
+        <a href="#overview">运行概况</a><a href="#plans">交易确认 <span id="pending-badge">0</span></a
+        ><a href="#connection">登录与连接</a><a href="#permissions">交易权限</a
+        ><a href="#tools">工具与诊断</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="dot"></span> 仅在此电脑运行<br /><small>127.0.0.1 · Windows 用户加密</small>
+      </div>
+    </aside>
+    <main>
+      <header id="overview">
+        <div>
+          <p class="eyebrow">TINY GRAIL / LOCAL WORKSPACE</p>
+          <h1>小圣杯，掌握在本机。</h1>
+          <p class="muted">真实数据通过 Tunnel 连接 ChatGPT，资产操作在这里由你确认。</p>
+        </div>
+        <button class="danger" id="kill">紧急停止写入</button>
+      </header>
+      <div id="notice" role="status" hidden></div>
+      <div id="locked" hidden class="panel">
+        <h2>从启动脚本打开控制台</h2>
+        <p>本地管理会话尚未建立。运行 <code>scripts/Start.ps1</code>，它会安全打开此页面。</p>
+      </div>
+      <div id="workspace" hidden>
+        <section class="stats">
+          <article>
+            <p>小圣杯账号</p>
+            <strong id="session-state">未检查</strong><small id="account-name">等待本地登录</small>
+          </article>
+          <article>
+            <p>Secure MCP Tunnel</p>
+            <strong id="tunnel-state">未配置</strong><small id="tunnel-detail">需要独立的 Tunnel ID</small>
+          </article>
+          <article>
+            <p>MCP 工具</p>
+            <strong id="tool-count">—</strong><small id="mcp-detail">等待本地协议检查</small>
+          </article>
+          <article>
+            <p>资产写入</p>
+            <strong id="write-state">已关闭</strong><small id="write-detail">每笔交易需要本地确认</small>
+          </article>
+        </section>
+        <section id="plans" class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">REVIEW & CONFIRM</p>
+              <h2>待确认交易</h2>
+            </div>
+            <span class="pill">独立本地审批</span>
+          </div>
+          <p class="muted">
+            ChatGPT 只能生成计划。核对账号、角色、数量和本金后，在这里批准。过期或状态变化的计划需要重新生成。
+          </p>
+          <div id="pending-plans"></div>
+          <details class="history">
+            <summary>本地操作历史与回执</summary>
+            <div id="history-plans"></div>
+          </details>
+        </section>
+        <section id="connection" class="columns">
+          <article class="panel">
+            <p class="eyebrow">ACCOUNT</p>
+            <h2>登录小圣杯</h2>
+            <p>使用独立的可见浏览器完成 Bangumi 登录与授权。只保存 TinyGrail 会话，浏览器随后关闭。</p>
+            <div class="buttons">
+              <button id="login" class="primary">打开登录窗口</button
+              ><button id="check-login">检查登录</button><button id="logout">退出 / 切换账号</button>
+            </div>
+            <p class="hint">退出会清除本地会话并使待确认计划失效。Cookie 使用 Windows 用户加密存储。</p>
+          </article>
+          <article class="panel">
+            <p class="eyebrow">OPENAI SECURE MCP TUNNEL</p>
+            <h2>连接 ChatGPT</h2>
+            <form id="tunnel-form">
+              <label
+                >Tunnel ID<input
+                  name="tunnelId"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="tunnel_…"
+                  required /></label
+              ><label
+                >Restricted API Key<input
+                  name="apiKey"
+                  type="password"
+                  autocomplete="off"
+                  placeholder="只在此本地页面输入"
+                  required /></label
+              ><button type="submit">加密保存配置</button>
+            </form>
+            <div class="buttons">
+              <button id="tunnel-start" class="primary">启动 Tunnel</button
+              ><button id="tunnel-stop">停止</button><button id="tunnel-restart">重启</button
+              ><button id="tunnel-doctor">连接诊断</button>
+            </div>
+            <p class="hint">
+              保持此电脑在线，在 ChatGPT 自定义 MCP 中选择 Tunnel 并关联该 ID。进程运行、控制面就绪与 ChatGPT
+              工具发现分别验证。
+            </p>
+          </article>
+        </section>
+        <section id="permissions" class="panel">
+          <p class="eyebrow">PERMISSIONS & LIMITS</p>
+          <h2>交易权限与限额</h2>
+          <p class="muted">
+            重启、退出登录或紧急停止会关闭写入。限额按请求本金或消耗资产的现价估值计算，实际费用另由游戏扣除。
+          </p>
+          <form id="policy-form">
+            <div class="policy-grid">
+              <label
+                >单次风险额度（₵）<input
+                  name="perTrade"
+                  type="text"
+                  inputmode="decimal"
+                  value="1000"
+                  required /></label
+              ><label
+                >每日累计风险额度（₵）<input
+                  name="daily"
+                  type="text"
+                  inputmode="decimal"
+                  value="5000"
+                  required /></label
+              ><label
+                >单次最大股数<input
+                  name="maxShares"
+                  type="number"
+                  min="1"
+                  max="100000000"
+                  value="100"
+                  required
+              /></label>
+            </div>
+            <fieldset>
+              <legend>允许的操作</legend>
+              <div id="allowed-actions" class="checks"></div>
+            </fieldset>
+            <label class="check"
+              ><input
+                name="acknowledgeUnverified"
+                type="checkbox"
+              />我了解写入适配器尚未经过真实账户写入验收；允许选中动作在我逐笔确认后执行。</label
+            ><label class="check"><input name="enabled" type="checkbox" />启用真实资产写入权限</label
+            ><button type="submit">保存权限与限额</button>
+          </form>
+          <p class="hint">结果未知时，先在游戏中核对订单、成交和余额，再填写本地对账说明以解除交易阻塞。</p>
+        </section>
+        <section id="tools" class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">OBSERVE & DIAGNOSE</p>
+              <h2>工具与诊断</h2>
+            </div>
+            <button id="mcp-probe">检查 stdio 协议</button>
+          </div>
+          <div class="buttons">
+            <button id="public-check">查询真实公开角色</button
+            ><button id="account-check">查询真实账户资产</button
+            ><button id="confirm-chatgpt">记录：已从 ChatGPT 查询成功</button
+            ><button id="refresh">刷新状态</button>
+          </div>
+          <pre id="diagnostic" class="output">选择检查项目以查看结果。</pre>
+          <details>
+            <summary>已注册工具与参数 Schema</summary>
+            <input id="tool-filter" placeholder="筛选工具…" aria-label="筛选工具" />
+            <div id="tool-list"></div>
+          </details>
+          <details>
+            <summary>组件状态与事件日志</summary>
+            <pre id="component-status" class="output"></pre>
+            <pre id="events" class="output"></pre>
+          </details>
+        </section>
+        <footer>
+          TinyGrailMCP 1.0 · 本地控制台
+          <button id="shutdown">关闭本地应用</button>
+        </footer>
+      </div>
+    </main>
+    <dialog id="approval">
+      <form method="dialog">
+        <div class="section-heading">
+          <h2>核对并批准交易</h2>
+          <button value="cancel" aria-label="关闭">×</button>
+        </div>
+        <div id="approval-details"></div>
+        <label class="check"><input id="approval-check" type="checkbox" />我已核对并确认执行这笔交易。</label>
+        <div class="buttons">
+          <button value="cancel">返回</button
+          ><button type="button" class="primary" id="approve-final" disabled>批准并执行这笔交易</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

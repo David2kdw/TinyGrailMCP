@@ -1,0 +1,16 @@
+config_version: 1
+control_plane:
+  base_url: https://api.openai.com
+  tunnel_id: tunnel_0123456789abcdef0123456789abcdef
+  api_key: env:CONTROL_PLANE_API_KEY
+health:
+  listen_addr: 127.0.0.1:0
+  url_file: ./private-data/tunnel-health.url
+log:
+  level: info
+  format: json
+mcp:
+  stdio_send_initialized_notification: true
+  commands:
+    - channel: main
+      command: 'node dist/index.js'
